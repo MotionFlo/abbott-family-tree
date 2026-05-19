@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<title>The Abbott Family — Private Tree</title>
+<style>
+  :root{
+    --ink:#1a1a1a; --muted:#5b5b5b; --soft:#7a7568;
+    --paper:#f7f1e2; --paper-2:#fbf6e9;
+    --line:#7a6c4f; --line-dim:#c9b88e;
+    --gold:#a07a2b; --gold-2:#c8932f;
+    --abbott:#3b5a78; --sibling:#6c7a59; --ancestor:#6a4d2e;
+    --macartney:#7a4b6b; --solomon:#a45a3f; --grand:#2f4f4f;
+    --modern:#1e6b8a; --living:#9b6b2f;
+    --line-direct:#a07a2b;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%;background:var(--paper);color:var(--ink);font-family:Georgia,"Times New Roman",serif;-webkit-font-smoothing:antialiased;overflow:hidden}
+
+  /* ===== APP LAYOUT ===== */
+  #app{display:flex;flex-direction:column;height:100vh}
+  header.top{
+    background:linear-gradient(180deg,#fbf6e9 0%,#f3ead3 100%);
+    border-bottom:1px solid var(--line-dim);
+    padding:14px 22px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+    box-shadow:0 1px 0 #fff inset, 0 4px 12px rgba(70,55,20,.06);
+    z-index:30;
+  }
+  header.top .brand{display:flex;flex-direction:column;line-height:1.15}
+  header.top .brand .crest{font-size:10px;letter-spacing:.34em;color:var(--gold);text-transform:uppercase}
+  header.top .brand h1{font-family:"Cinzel","Trajan Pro","Times New Roman",serif;font-weight:normal;font-size:22px;margin:2px 0 0;letter-spacing:.05em;color:#2d2418}
+  header.top .brand .sub{font-style:italic;color:var(--muted);font-size:12px;margin-top:1px}
+
+  header.top .controls{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .search-wrap{position:relative}
+  #search{
+    width:240px;padding:8px 14px 8px 32px;border:1px solid #d3c39b;border-radius:18px;
+    background:#fff;font-family:inherit;font-size:13px;color:var(--ink);outline:none;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  #search:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(160,122,43,.15)}
+  .search-wrap:before{
+    content:"";position:absolute;left:12px;top:50%;width:12px;height:12px;
+    border:1.5px solid #b4a173;border-radius:50%;transform:translateY(-50%);
+  }
+  .search-wrap:after{
+    content:"";position:absolute;left:21px;top:60%;width:1.5px;height:6px;background:#b4a173;
+    transform:rotate(-45deg);transform-origin:top;
+  }
+  .btn{
+    padding:8px 12px;border:1px solid #d3c39b;background:#fff;border-radius:6px;cursor:pointer;
+    font-family:inherit;font-size:12px;letter-spacing:.04em;color:var(--ink);
+    transition:background .12s,border-color .12s;
+  }
+  .btn:hover{background:#faf3df;border-color:var(--gold)}
+  .btn.toggle.active{background:var(--gold);color:#fff;border-color:var(--gold)}
+  .zoom-group{display:inline-flex;border:1px solid #d3c39b;border-radius:6px;overflow:hidden;background:#fff}
+  .zoom-group .btn{border:0;border-right:1px solid #eadfc6;border-radius:0;padding:8px 10px}
+  .zoom-group .btn:last-child{border-right:0}
+
+  /* ===== CANVAS ===== */
+  #canvas-wrap{
+    flex:1;position:relative;overflow:auto;
+    background:
+      radial-gradient(circle at 20% 18%, rgba(200,147,47,.08) 0%, transparent 55%),
+      radial-gradient(circle at 80% 80%, rgba(60,90,120,.05) 0%, transparent 50%),
+      linear-gradient(180deg, var(--paper) 0%, var(--paper-2) 100%);
+  }
+  #canvas{
+    position:relative;
+    width:3800px;height:3400px;
+    transform-origin:0 0;
+    transition:transform .2s ease-out;
+  }
+  #connectors{
+    position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;
+  }
+
+  /* ===== PERSON CARDS ===== */
+  .person{
+    position:absolute;width:200px;
+    background:#fff;border:1px solid #d9cdb1;border-top:4px solid var(--abbott);
+    padding:10px 12px;border-radius:4px;cursor:pointer;text-align:center;
+    box-shadow:0 1px 0 #eadfc6, 0 6px 14px rgba(90,70,30,.07);
+    transition:transform .15s, box-shadow .15s, opacity .2s, border-color .15s;
+    z-index:5;
+  }
+  .person:hover{
+    transform:translateY(-3px);
+    box-shadow:0 1px 0 #eadfc6, 0 10px 22px rgba(90,70,30,.16);
+    z-index:8;
+  }
+  .person.ancestor{border-top-color:var(--ancestor)}
+  .person.sibling{border-top-color:var(--sibling)}
+  .person.macartney{border-top-color:var(--macartney)}
+  .person.solomon{border-top-color:var(--solomon)}
+  .person.grand{border-top-color:var(--grand)}
+  .person.modern{border-top-color:var(--modern)}
+  .person.hero{
+    border:2px solid var(--gold);border-top:5px solid var(--gold);
+    background:linear-gradient(180deg,#fff 0%,#fdf6e3 100%);
+    box-shadow:0 1px 0 #eadfc6, 0 10px 24px rgba(160,122,43,.18);
+  }
+  .person.direct-line{
+    box-shadow:0 0 0 2px var(--line-direct), 0 8px 18px rgba(160,122,43,.18);
+  }
+  .person .name{font-size:13.5px;font-weight:bold;letter-spacing:.01em;line-height:1.22;color:#221c12}
+  .person .dates{font-size:11px;color:var(--muted);margin-top:3px}
+  .person .role{font-size:10.5px;font-style:italic;color:#444;margin-top:4px;line-height:1.3}
+  .person.hero .name{color:var(--abbott)}
+  .person.hero .role{color:var(--gold);font-weight:bold;font-style:normal;letter-spacing:.06em;font-size:9.5px;text-transform:uppercase;margin-top:5px}
+  .person.dim{opacity:.18;filter:grayscale(.5)}
+  .person.match{box-shadow:0 0 0 3px #c8932f, 0 8px 18px rgba(200,147,47,.4);animation:pulse 1.4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 3px #c8932f, 0 8px 18px rgba(200,147,47,.4)} 50%{box-shadow:0 0 0 5px #e6b85a, 0 10px 24px rgba(200,147,47,.55)}}
+
+  .person .crest{
+    position:absolute;top:-8px;right:-8px;background:var(--gold);color:#fff;
+    width:18px;height:18px;border-radius:50%;font-size:10px;display:flex;align-items:center;justify-content:center;
+    font-weight:bold;letter-spacing:0;font-style:normal;box-shadow:0 1px 3px rgba(0,0,0,.2)
+  }
+
+  /* ===== GENERATION LABELS ===== */
+  .gen-label{
+    position:absolute;left:18px;
+    font-family:"Cinzel","Times New Roman",serif;font-size:11px;letter-spacing:.28em;
+    color:var(--gold);text-transform:uppercase;padding:5px 14px;
+    background:rgba(251,246,233,.85);border-left:3px solid var(--gold);
+    border-radius:0 4px 4px 0;
+    z-index:2;
+  }
+
+  /* ===== DETAIL PANEL ===== */
+  #panel{
+    position:fixed;top:0;right:0;bottom:0;width:480px;max-width:92vw;
+    background:#fbf6e9;border-left:1px solid var(--line-dim);
+    transform:translateX(100%);transition:transform .25s ease-out;
+    box-shadow:-12px 0 32px rgba(60,40,10,.18);
+    z-index:50;display:flex;flex-direction:column;
+  }
+  #panel.open{transform:translateX(0)}
+  #panel header{
+    padding:18px 22px;border-bottom:1px solid var(--line-dim);background:linear-gradient(180deg,#fff,#fbf6e9);
+    position:relative
+  }
+  #panel header .role{font-size:10px;letter-spacing:.3em;color:var(--gold);text-transform:uppercase}
+  #panel header h2{font-family:"Cinzel",serif;font-weight:normal;font-size:22px;margin:6px 0 2px;color:#2d2418}
+  #panel header .dates{color:var(--muted);font-size:13px;font-style:italic}
+  #close-panel{position:absolute;top:10px;right:14px;border:0;background:transparent;font-size:22px;color:var(--muted);cursor:pointer;width:32px;height:32px;border-radius:50%}
+  #close-panel:hover{background:rgba(0,0,0,.06);color:#000}
+
+  #panel .body{padding:18px 22px;overflow-y:auto;flex:1;line-height:1.6}
+  #panel .body h3{font-family:"Cinzel",serif;font-weight:normal;font-size:13px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin:18px 0 6px;border-bottom:1px solid var(--line-dim);padding-bottom:4px}
+  #panel .body p{margin:6px 0 10px;font-size:14.5px;color:#262017}
+  #panel .body .meta{display:grid;grid-template-columns:110px 1fr;gap:4px 12px;font-size:13px;color:#3a322a;margin:8px 0}
+  #panel .body .meta .label{color:var(--muted);font-variant:small-caps;letter-spacing:.06em;font-size:12px}
+  #panel .body .relation a{color:var(--abbott);cursor:pointer;text-decoration:none;border-bottom:1px dotted #aab}
+  #panel .body .relation a:hover{border-bottom-style:solid}
+  #panel .body ul.refs{padding-left:18px;font-size:12px;color:var(--muted);margin:6px 0}
+  #panel .body ul.refs a{color:var(--abbott);text-decoration:none;border-bottom:1px dotted #aab}
+
+  /* ===== LEGEND ===== */
+  #legend{
+    position:fixed;left:22px;bottom:22px;background:rgba(255,251,238,.94);
+    border:1px solid var(--line-dim);border-radius:8px;padding:10px 14px;
+    font-size:12px;color:var(--muted);z-index:20;
+    box-shadow:0 4px 14px rgba(70,55,20,.08);max-width:240px;
+  }
+  #legend .lhead{font-family:"Cinzel",serif;font-size:10px;letter-spacing:.28em;color:var(--gold);text-transform:uppercase;margin-bottom:6px}
+  #legend .item{display:flex;align-items:center;gap:8px;margin:3px 0}
+  #legend .sw{width:12px;height:4px;border-radius:1px;display:inline-block}
+
+  /* ===== INTRO MODAL ===== */
+  #intro{
+    position:fixed;inset:0;background:rgba(40,30,12,.55);z-index:80;display:flex;align-items:center;justify-content:center;
+    opacity:1;transition:opacity .2s;
+  }
+  #intro.hidden{opacity:0;pointer-events:none}
+  #intro .card{
+    background:linear-gradient(180deg,#fffaee,#f4ead2);border:1px solid var(--line-dim);border-top:5px solid var(--gold);
+    max-width:560px;padding:32px 34px;border-radius:6px;text-align:center;
+    box-shadow:0 16px 40px rgba(60,40,10,.35);
+  }
+  #intro .crest{font-size:11px;letter-spacing:.34em;color:var(--gold);text-transform:uppercase}
+  #intro h1{font-family:"Cinzel",serif;font-weight:normal;font-size:30px;margin:10px 0 6px;letter-spacing:.04em}
+  #intro .sub{font-style:italic;color:var(--muted);margin-bottom:14px}
+  #intro p{font-size:14.5px;line-height:1.6;color:#3a322a;text-align:left}
+  #intro .start{margin-top:18px;background:var(--gold);color:#fff;border:0;padding:10px 22px;border-radius:24px;cursor:pointer;font-family:inherit;font-size:14px;letter-spacing:.06em}
+  #intro .start:hover{background:#8a6722}
+
+  /* SVG line styles */
+  .line{stroke:var(--line);stroke-width:1.5;fill:none}
+  .line.couple{stroke:var(--gold);stroke-width:2}
+  .line.direct{stroke:var(--line-direct);stroke-width:2.5}
+
+  @media print{
+    header.top,#legend,#panel,#intro,#password-gate{display:none !important}
+    #canvas-wrap{overflow:visible;height:auto}
+    #canvas{transform:none !important}
+    body,html{height:auto;overflow:visible}
+  }
+
+  /* ===== PASSWORD GATE ===== */
+  #password-gate{
+    position:fixed;inset:0;background:linear-gradient(180deg,#3a2c14 0%,#1a1208 100%);
+    z-index:100;display:flex;align-items:center;justify-content:center;padding:24px;
+    color:#fbf6e9;font-family:Georgia,"Times New Roman",serif;
+  }
+  #password-gate.hidden{display:none}
+  #password-gate .gate-card{
+    background:linear-gradient(180deg,#fffaee,#f4ead2);color:#2d2418;
+    border:1px solid #c9b88e;border-top:5px solid #a07a2b;
+    max-width:460px;width:100%;padding:36px 38px;border-radius:6px;text-align:center;
+    box-shadow:0 24px 60px rgba(0,0,0,.55), 0 0 0 1px rgba(160,122,43,.2);
+  }
+  #password-gate .crest{font-size:11px;letter-spacing:.34em;color:#a07a2b;text-transform:uppercase}
+  #password-gate h1{font-family:"Cinzel","Trajan Pro","Times New Roman",serif;font-weight:normal;font-size:26px;margin:10px 0 6px;letter-spacing:.05em}
+  #password-gate .sub{font-style:italic;color:#5b5b5b;margin-bottom:18px;font-size:14px}
+  #password-gate p{font-size:14px;line-height:1.55;color:#3a322a;text-align:left;margin:0 0 14px}
+  #password-gate .pw-row{display:flex;gap:8px;margin-top:6px}
+  #password-gate input{
+    flex:1;padding:10px 14px;border:1px solid #d3c39b;border-radius:6px;
+    font-family:inherit;font-size:15px;color:#2d2418;background:#fff;outline:none;
+  }
+  #password-gate input:focus{border-color:#a07a2b;box-shadow:0 0 0 3px rgba(160,122,43,.18)}
+  #password-gate button{
+    padding:10px 18px;background:#a07a2b;color:#fff;border:0;border-radius:6px;
+    font-family:inherit;font-size:14px;cursor:pointer;letter-spacing:.05em;
+  }
+  #password-gate button:hover{background:#8a6722}
+  #password-gate .pw-error{
+    color:#a04030;font-size:13px;margin-top:10px;min-height:18px;font-style:italic;
+  }
+  #password-gate .note{
+    font-size:11.5px;color:#7a6c4f;margin-top:18px;padding-top:14px;
+    border-top:1px dashed #c9b88e;font-style:italic;line-height:1.5;
+  }
+  /* When gate is up, hide app */
+  body.locked #app, body.locked #legend, body.locked #panel, body.locked #intro{display:none !important}
+</style>
+</head>
+<body class="locked">
+
+<div id="password-gate">
+  <div class="gate-card">
+    <div class="crest">A Private Family Page</div>
+    <h1>The Abbott Family</h1>
+    <div class="sub">Five centuries of family history — for our family only</div>
+    <p>
+      This tree contains personal information about living family members.
+      Please enter the family password to continue.
+    </p>
+    <div class="pw-row">
+      <input type="password" id="pw-input" placeholder="Family password" autocomplete="off" autofocus>
+      <button id="pw-submit">Enter</button>
+    </div>
+    <div class="pw-error" id="pw-error"></div>
+    <div class="note">
+      If you don't have the password, contact the family member who shared this link with you.
+    </div>
+  </div>
+</div>
+
+<div id="app">
+
+  <header class="top">
+    <div class="brand">
+      <div class="crest">An Australian Colonial Dynasty</div>
+      <h1>The Abbott Family</h1>
+      <div class="sub">Broadford, Co. Clare → the Hunter Valley → today</div>
+    </div>
+    <div class="controls">
+      <div class="search-wrap">
+        <input id="search" placeholder="Search a name..." autocomplete="off">
+      </div>
+      <button class="btn toggle" id="highlight-line">Highlight Ben's line</button>
+      <div class="zoom-group">
+        <button class="btn" data-zoom="out">−</button>
+        <button class="btn" data-zoom="reset">Fit</button>
+        <button class="btn" data-zoom="in">+</button>
+      </div>
+    </div>
+  </header>
+
+  <div id="canvas-wrap">
+    <div id="canvas">
+      <svg id="connectors" viewBox="0 0 3800 3400" preserveAspectRatio="none"></svg>
+      <!-- People injected by JS -->
+    </div>
+  </div>
+
+</div>
+
+<aside id="panel" aria-hidden="true">
+  <header>
+    <div class="role" id="panel-role">—</div>
+    <h2 id="panel-name">—</h2>
+    <div class="dates" id="panel-dates">—</div>
+    <button id="close-panel" aria-label="Close">×</button>
+  </header>
+  <div class="body" id="panel-body">—</div>
+</aside>
+
+<div id="legend">
+  <div class="lhead">Legend</div>
+  <div class="item"><span class="sw" style="background:var(--ancestor)"></span> Irish ancestors</div>
+  <div class="item"><span class="sw" style="background:var(--sibling)"></span> Sir Joseph's siblings</div>
+  <div class="item"><span class="sw" style="background:var(--gold)"></span> Sir Joseph (subject)</div>
+  <div class="item"><span class="sw" style="background:var(--macartney)"></span> First marriage line</div>
+  <div class="item"><span class="sw" style="background:var(--solomon)"></span> Second marriage line</div>
+  <div class="item"><span class="sw" style="background:var(--grand)"></span> Grandchildren</div>
+  <div class="item"><span class="sw" style="background:var(--modern)"></span> 20th–21st century</div>
+  <div class="item" style="margin-top:8px;padding-top:6px;border-top:1px dotted var(--line-dim)"><span class="sw" style="background:var(--line-direct);height:3px"></span> Ben's direct line</div>
+</div>
+
+<div id="intro">
+  <div class="card">
+    <div class="crest">A note before you begin</div>
+    <h1>The Abbotts of Broadford &amp; the Hunter</h1>
+    <div class="sub">Five centuries condensed onto one canvas</div>
+    <p>
+      This tree traces your family from an Irish constable's house in <strong>Broadford, County Clare</strong>, through the Hunter Valley pastoral dynasty founded by <strong>John Kingsmill Abbott</strong>, the colonial political dynasty led by your great-great-grandfather <strong>Sir Joseph Palmer Abbott, KCMG</strong>, and on through the Senator, the soldier, the novelist, the Northern Territory Administrator, and the grazier of Tooloogan Vale — your grandfather <strong>William Edward Macartney Abbott</strong> — down to you.
+    </p>
+    <p style="margin-top:10px">
+      <strong>Click any name</strong> to read their full biography. The <strong>gold-outlined boxes</strong> are your direct line of descent. Use the search box to jump to anyone, and the zoom controls to navigate.
+    </p>
+    <button class="start" onclick="document.getElementById('intro').classList.add('hidden')">Open the tree</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   ★ PASSWORD GATE — change the password here ★
+   ------------------------------------------------------------
+   The line below sets the password for this site. To change it,
+   edit the value between the quotes. Save the file and re-deploy.
+   ------------------------------------------------------------
+   This gate is a "polite lock" — it stops casual viewers and
+   search engines, but anyone who views the page source can find
+   the password. For real security you would need server-side
+   authentication. For a family page, this is usually enough.
+============================================================ */
+const FAMILY_PASSWORD = "broadford";
+
+(function setupGate(){
+  const gate = document.getElementById('password-gate');
+  const input = document.getElementById('pw-input');
+  const button = document.getElementById('pw-submit');
+  const err = document.getElementById('pw-error');
+
+  // Remember unlock for this browser session
+  function unlock(){
+    document.body.classList.remove('locked');
+    gate.classList.add('hidden');
+    try { sessionStorage.setItem('abbott-tree-ok','1'); } catch(e){}
+  }
+  function tryPassword(){
+    const v = (input.value||'').trim().toLowerCase();
+    if(v === FAMILY_PASSWORD.toLowerCase()){
+      err.textContent = '';
+      unlock();
+    } else {
+      err.textContent = 'That doesn’t match — try again, or check with the family member who sent you the link.';
+      input.value = '';
+      input.focus();
+    }
+  }
+  button.addEventListener('click', tryPassword);
+  input.addEventListener('keydown', e => { if(e.key === 'Enter') tryPassword(); });
+
+  // If already unlocked this session, skip the gate
+  try {
+    if(sessionStorage.getItem('abbott-tree-ok') === '1') unlock();
+  } catch(e){}
+})();
+
+/* ============================================================
+   THE ABBOTT FAMILY — Data
+   Each person has: id, name, dates, role (short), tier, x, y,
+   direct (in Ben's line), bio (long-form), sources, relations
+============================================================ */
+const PEOPLE = [
+  // ====== TIER 0 — Ancient Kingsmill line (England) ======
+  {
+    id:"sir-john-kingsmill", name:"Sir John Kingsmill", dates:"c.1497 – 1556",
+    tier:"ancestor", role:"of Sydmonton, Hants. — Justice of the Peace",
+    x:140, y:60,
+    bio:`<p>An indicative early bearer of the Kingsmill name — the surname that travels four centuries down the family before re-surfacing as Eleanor Kingsmill of Broadford in the 1780s.</p>
+<p>Sir John was the son of John Kingsmill (c.1460–1509), Justice of the Common Pleas and Chief Justice for Lancaster under Henry VII. He entered Lincoln's Inn in 1516, was called to the bar in 1521, married Constance Goring of Burton, Sussex, and was knighted by Henry VIII in 1530. He served as steward of Mottisfont Priory in Hampshire, sheriff for Hampshire, and acquired the manor of Sydmonton — which replaced Barkham as the family seat — in 1540. His grandfather Richard Kingsmill (d.1511) had hosted Catherine of Aragon at Sydmonton in 1501 on her journey from the south coast to marry Arthur, Prince of Wales.</p>
+<p>The Hampshire Kingsmills were among Henry VIII's beneficiaries in the dissolution of the monasteries, and several branches went out to Ireland during the 17th-century plantations. The exact line connecting these English Kingsmills to the Co. Clare Kingsmill of Eleanor's generation has not been documented here and would require parish-register research in Limerick/Clare. The name's persistence in the Abbott family — John Kingsmill Abbott, Thomas Kingsmill Abbott, Eleanor Kingsmill Abbott, Terence Kingsmill Abbott — strongly suggests a self-conscious memory of that connection.</p>`,
+    sources:[
+      {label:"Tudor Society — Sir John Kingsmill", url:"https://www.tudorsociety.com/august-11-sir-john-kingsmill/"},
+      {label:"WikiTree — John Kingsmill (1494–1556)", url:"https://www.wikitree.com/wiki/Kingsmill-8"}
+    ],
+    relations:[]
+  },
+
+  // ====== TIER 1 — Irish ancestors (immigrant generation's parents) ======
+  {
+    id:"jonathan-abbott", name:"Jonathon Abbott & Martha", dates:"18th century · Ireland",
+    tier:"ancestor", role:"Parents of the immigrant Thomas",
+    x:560, y:60,
+    bio:`<p>Parents of <strong>Thomas Abbott of Broadford</strong>, who was born c.1773–74 in Co. Clare. Their exact dates, places of birth, and surnames are not recovered from publicly indexed sources. Broadford parish baptism registers — which begin in 1844 for Catholic records and earlier for Church of Ireland records — would be the natural next step to recover their full identities.</p>
+<p>The naming pattern "Jonathon" suggests a Protestant family of probable English-planter descent, which is consistent with Thomas's later career as a constable in colonial police service.</p>`,
+    sources:[
+      {label:"Familypedia — Thomas Abbott (c1774–1855)", url:"https://familypedia.fandom.com/wiki/Thomas_Abbott_(c1774-1855)"}
+    ],
+    relations:[]
+  },
+  {
+    id:"kingsmill-clare", name:"The Kingsmills of Clare", dates:"18th century",
+    tier:"ancestor", role:"Parents of Eleanor",
+    x:980, y:60,
+    bio:`<p>Eleanor Kingsmill (c.1787–1873) was born into a Co. Clare Kingsmill family whose forenames have not been recovered from public sources. By the time of her marriage in 1803 the Kingsmills had been a recognisable family in west Limerick and east Clare for several generations, possibly descended from one of the 17th-century plantation branches of the Hampshire Kingsmills.</p>
+<p>The Kingsmill surname is the longest-lasting given-name marker in this family — passed down four generations to William <em>Edward Macartney</em> Abbott's grandson Terence <em>Kingsmill</em> Abbott (b.1912) and beyond.</p>`,
+    sources:[],
+    relations:[]
+  },
+  {
+    id:"brady-tralee", name:"The Bradys of Tralee", dates:"18th century",
+    tier:"ancestor", role:"Parents of Frances Amanda Brady",
+    x:1400, y:60,
+    bio:`<p>Frances Amanda Brady, who married John Kingsmill Abbott at Tralee in 1839, was the daughter of a Brady family of Tralee, Co. Kerry. Their forenames are not in the published record. Tralee Roman Catholic and Church of Ireland parish registers, plus the Tithe Applotment books and Griffith's Valuation, would be the obvious next sources.</p>`,
+    sources:[],
+    relations:[]
+  },
+  {
+    id:"benjamin-singleton", name:"Benjamin Singleton", dates:"7 Aug 1788 – 2 May 1853",
+    tier:"ancestor", role:"Hunter Valley pioneer — town namesake",
+    x:1820, y:60,
+    bio:`<p>An Australian pioneering figure whose family married into the Abbotts in the next generation. Born in England of Scottish parentage, son of William Singleton (a London warehouseman transported in 1791 for seven years) and Hannah; arrived Port Jackson on the convict transport <em>Pitt</em>, 14 February 1792, aged three. Granted ninety acres at Mulgrave Place, he became a miller, building water-mills at Kurrajong and Lower Portland Head with his brother James.</p>
+<p>His significance to Australian history rests on his exploration of the route to the upper Hunter Valley. After a failed expedition in 1818, he was part of John Howe's successful 1820 party which reached Patrick's Plains. In reward he was granted 200 acres on 31 March 1821 — the land on which the town of <strong>Singleton, NSW</strong> now stands and which carries his name.</p>
+<p>He married Mary Sharling (1796–1877), daughter of Thomas Sharling of the 102nd Regiment, on 7 February 1811, and they had ten children — one of whom, <strong>Emma Singleton</strong>, was Sir Joseph Palmer Abbott's mother-in-law via his second wife Edith Solomon.</p>`,
+    sources:[
+      {label:"ADB — Benjamin Singleton", url:"https://adb.anu.edu.au/biography/singleton-benjamin-2667"},
+      {label:"Wikipedia — Benjamin Singleton (settler)", url:"https://en.wikipedia.org/wiki/Benjamin_Singleton_(Australian_settler)"}
+    ],
+    relations:[]
+  },
+
+  // ====== TIER 2 — Immigrant generation (Sir Joseph's grandparents and in-law equivalents) ======
+  {
+    id:"thomas-abbott", name:"Thomas Abbott", dates:"c.1773/74 – c.1853/55", tier:"ancestor",
+    role:"of Broadford, Co. Clare. Police constable. Emigrated 1838",
+    x:560, y:280, direct:true,
+    bio:`<p>Your <strong>great-great-great-great-grandfather</strong>. Born around 1773–74 at Broadford, Co. Clare, in the south-east corner of that county. Son of Jonathon Abbott and Martha. Married Eleanor Kingsmill on <strong>16 October 1803</strong> in Ireland.</p>
+<p>Thomas served as a police constable — the source of the family's later reputation for moral seriousness and public service. In <strong>January 1838</strong>, in his early sixties, he sailed with Eleanor and most of their ten children to New South Wales as <em>assisted immigrants</em>, settling first in the Hunter Valley. He died in NSW around 1853–55 in his early eighties.</p>
+<p>From this household sprang the entire Australian Abbott line — including the Speaker, the squatter of Wingen, the Northern Territory Administrator, two Federal members, a Senator, and you.</p>`,
+    sources:[
+      {label:"ADB — Robert Palmer Abbott (Thomas's son)", url:"https://adb.anu.edu.au/biography/abbott-robert-palmer-2859"},
+      {label:"Familypedia — Thomas Abbott (c1774–1855)", url:"https://familypedia.fandom.com/wiki/Thomas_Abbott_(c1774-1855)"}
+    ],
+    relations:[
+      {label:"Father of John Kingsmill Abbott", id:"john-kingsmill-abbott"},
+      {label:"Father of Robert Palmer Abbott", id:"robert-palmer-abbott"}
+    ]
+  },
+  {
+    id:"eleanor-kingsmill", name:"Eleanor Kingsmill", dates:"c.1787 – 1873", tier:"ancestor",
+    role:"of Co. Clare. m. 16 Oct 1803. Matriarch of the Australian line",
+    x:780, y:280, direct:true,
+    bio:`<p>Your <strong>great-great-great-great-grandmother</strong>. Born around 1787 in Co. Clare. The Kingsmill surname she brought into the family became the most enduring given-name marker across the next two centuries.</p>
+<p>She married Thomas Abbott on 16 October 1803 and bore at least ten children. In her early fifties she made the great journey to Sydney with the family in 1838. She lived a long widow's life in NSW, dying in 1873 aged about 86 — outliving her husband by some twenty years and seeing her grandson Joseph become a Member of Parliament.</p>
+<p>Her name survives in: John <em>Kingsmill</em> Abbott (son), Thomas <em>Kingsmill</em> Abbott (son, then grandson), Eleanor <em>Kingsmill</em> Abbott (great-granddaughter, 1887–1968), Terence <em>Kingsmill</em> Abbott (great-grandson, b.1912).</p>`,
+    sources:[
+      {label:"WikiTree — Eleanor (Kingsmill) Abbott", url:"https://www.wikitree.com/wiki/Kingsmill-374"}
+    ],
+    relations:[
+      {label:"Mother of John Kingsmill Abbott", id:"john-kingsmill-abbott"}
+    ]
+  },
+
+  // ====== TIER 3 — Sir Joseph's parents and immigrant generation in-laws ======
+  {
+    id:"john-kingsmill-abbott", name:"John Kingsmill Abbott", dates:"1805 – 1847", tier:"ancestor",
+    role:"Squatter — Muswellbrook & Glengarry, NSW",
+    x:780, y:520, direct:true,
+    bio:`<p>Your <strong>great-great-great-grandfather</strong>. Born 1805 in Broadford, Co. Clare — eldest known child of Thomas Abbott and Eleanor Kingsmill. Came out to NSW with his parents and siblings as part of the family's assisted migration of January 1838, aged about 33.</p>
+<p>He married <strong>Frances Amanda Brady</strong> in Tralee, Co. Kerry on his return visit in 1839. The couple settled at Muswellbrook in the upper Hunter Valley, where in 1842 their first son — the future Sir Joseph Palmer Abbott — was born.</p>
+<p>John Kingsmill Abbott died young, in <strong>1847</strong>, leaving Frances Amanda widowed with five young children. She moved the household to the family station <strong>"Glengarry"</strong> near Wingen, where the children grew up. The eldest son (Sir Joseph) was only five at his father's death — too young to remember him.</p>
+<p>The pastoral empire he founded — Glengarry, Murrulla, Abbotsford — was built up by his second son William ("Wingen") into one of the great upper-Hunter estates of the late nineteenth century.</p>`,
+    sources:[
+      {label:"Find a Grave — John Kingsmill Abbott", url:"https://www.findagrave.com/memorial/109599021/john-kingsmill-abbott"},
+      {label:"ADB — Sir Joseph Palmer Abbott", url:"https://adb.anu.edu.au/biography/abbott-sir-joseph-palmer-2858"}
+    ],
+    relations:[
+      {label:"Father of Sir Joseph Palmer Abbott", id:"sir-joseph"},
+      {label:"Father of William Edward (Wingen)", id:"wingen-abbott"}
+    ]
+  },
+  {
+    id:"frances-amanda-brady", name:"Frances Amanda Brady", dates:"of Tralee — m.1839", tier:"ancestor",
+    role:"Widowed 1847; raised the family at Glengarry",
+    x:1020, y:520, direct:true,
+    bio:`<p>Your <strong>great-great-great-grandmother</strong>. Born into a Brady family of Tralee, Co. Kerry, Ireland; her parents' forenames have not been recovered from publicly indexed sources. She married John Kingsmill Abbott in Tralee in 1839 and emigrated with him to NSW.</p>
+<p>After her husband's death in 1847 she single-handedly raised five children (Joseph, William, Lydia, Thomas Kingsmill, John Henry) at the Glengarry station near Wingen. She lived to see her eldest son Joseph become a leading colonial parliamentarian.</p>
+<p>The persistence of her forename "Frances Amanda" through the family — given to Sir Joseph's eldest daughter (b.1875) — is a fingerprint of her standing in the family memory.</p>`,
+    sources:[
+      {label:"ADB — Sir Joseph Palmer Abbott", url:"https://adb.anu.edu.au/biography/abbott-sir-joseph-palmer-2858"}
+    ],
+    relations:[]
+  },
+
+  // Uncles of Sir Joseph (notable)
+  {
+    id:"robert-palmer-abbott", name:"Robert Palmer Abbott", dates:"1830 – 1901", tier:"ancestor",
+    role:"Solicitor; MLA. Mentored young Sir Joseph",
+    x:300, y:520,
+    bio:`<p>Sir Joseph's paternal uncle — younger brother of John Kingsmill Abbott. Born at Broadford, Co. Clare, son of Thomas Abbott (constable) and Eleanor Kingsmill. Emigrated to Sydney as a child with his parents in January 1838.</p>
+<p>Admitted a solicitor in 1854. In 1858–59 the young Joseph Palmer Abbott was articled to him, learning the law that would underpin his later career. Robert was himself elected to the New South Wales Legislative Assembly, and the political and legal pattern he set was followed by his nephew and grand-nephews.</p>
+<p>He died in 1901 — the same year as his more famous nephew Sir Joseph. They are buried in the same cemetery.</p>`,
+    sources:[
+      {label:"ADB — Robert Palmer Abbott", url:"https://adb.anu.edu.au/biography/abbott-robert-palmer-2859"}
+    ],
+    relations:[]
+  },
+
+  {
+    id:"michael-macartney", name:"Dr Michael Macartney & Matilda Laird", dates:"of Maitland",
+    tier:"ancestor", role:"Parents of Matilda Elizabeth Macartney (Sir Joseph's first wife)",
+    x:1280, y:520, direct:true,
+    bio:`<p>Maitland physician and his wife. The father of <strong>Matilda Elizabeth Macartney</strong> who married Sir Joseph Palmer Abbott at West Maitland on 14 February 1873.</p>
+<p>The Macartneys were an Irish-Australian family with strong professional standing in the Maitland district. Their daughter's name lives on in <em>every</em> succeeding generation of your direct line: John Henry <em>Macartney</em> Abbott (novelist), <em>Macartney</em> "Mac" Abbott (Senator), William Edward <em>Macartney</em> Abbott (Tooloogan grazier, your grandfather).</p>
+<p>Matilda Laird's parentage is not in the published record. This is one of the higher-priority leads to follow up via Trove and parish records.</p>`,
+    sources:[
+      {label:"ADB — Sir Joseph Palmer Abbott", url:"https://adb.anu.edu.au/biography/abbott-sir-joseph-palmer-2858"}
+    ],
+    relations:[
+      {label:"Parents of Matilda Elizabeth Macartney", id:"matilda-macartney"}
+    ]
+  },
+
+  {
+    id:"james-solomon", name:"James Solomon & Emma Singleton", dates:"m.1846 · Maitland",
+    tier:"ancestor", role:"Maitland merchant family — parents of Edith",
+    x:1840, y:520,
+    bio:`<p>The parents of <strong>Edith Solomon</strong>, Sir Joseph's second wife.</p>
+<p><strong>James Solomon</strong> (c.1805–12 April 1854, West Maitland) was a Maitland merchant of mercantile family — son of Martin Solomon and Ann Solomon. Emma Singleton (26 April 1825 – 13 January 1898) was his bride: she was the daughter of <strong>Benjamin Singleton</strong>, the upper-Hunter explorer and miller after whom the town of Singleton is named, and of Mary Sharling.</p>
+<p>James and Emma married on 14 September 1846 and had three children — Blanche (1848–1941), Claude (1853–1910), and <strong>Edith (1854–1935)</strong> — before James's premature death in 1854 left Emma a widow at twenty-nine. Emma remarried in 1856 to George Vindin and had seven more children with him (the Vindin half-siblings of Edith).</p>`,
+    sources:[
+      {label:"Familypedia — Emma Singleton", url:"https://familypedia.fandom.com/wiki/Emma_Singleton_(1825-1898)"}
+    ],
+    relations:[]
+  },
+
+  // ====== TIER 4 — Sir Joseph and siblings ======
+  {
+    id:"wingen-abbott", name:"William Edward Abbott", dates:"1 Apr 1844 – 1924", tier:"sibling",
+    role:"\"Wingen\" — pastoralist & MLA. Unmarried",
+    x:340, y:780,
+    bio:`<p>Sir Joseph's younger brother. Born 1 April 1844 at Muswellbrook, the second son of John Kingsmill Abbott and Frances Amanda Brady.</p>
+<p>At sixteen — only thirteen years after his father's death — he took over the family pastoral interests at <strong>Wingen</strong>, in the upper Hunter Valley. Over the next three decades he built the original Glengarry holding into a 30,000-acre estate called <strong>Abbotsford</strong>, incorporating Glengarry and Murrulla stations, gradually converting leasehold land to freehold. By 1890 he was running close to 21,000 sheep and 100 head of Devon cattle.</p>
+<p>Elected to the NSW Legislative Assembly as a Protectionist for the Upper Hunter in 1889. He was prominent in passing the Crown Rents Act of 1890. He remained an MLA until 1894 and was a leading authority on rural matters, writing extensively on the wool industry and rural science (his nickname "Wingen" was used to distinguish him in print).</p>
+<p>He never married. His Murrulla property passed in due course to his nephew Joe Abbott. He died at Wingen in 1924, aged 80.</p>`,
+    sources:[
+      {label:"ADB — William Edward (Wingen) Abbott", url:"https://adb.anu.edu.au/biography/abbott-william-edward-wingen-6"},
+      {label:"Merritt, That Voluminous Squatter (1999)", url:"https://www.une.edu.au/about-une/news-and-events/news/2020/04/documenting-the-man-who-was-more-than-just-a-squatter"}
+    ],
+    relations:[
+      {label:"Brother of Sir Joseph", id:"sir-joseph"}
+    ]
+  },
+  {
+    id:"lydia-shaw", name:"Lydia Frances Abbott", dates:"b. c.1846", tier:"sibling",
+    role:"m. — Shaw. Sir Joseph's sister",
+    x:580, y:780,
+    bio:`<p>Eldest daughter of John Kingsmill Abbott and Frances Amanda Brady, and Sir Joseph's only known full sister. She married into the Shaw family — her son <em>J. A. K. Shaw of Scone</em> later took on the law-articled Macartney Abbott (Sir Joseph's son) in 1900, keeping the legal mentorship pattern alive across two generations.</p>`,
+    sources:[
+      {label:"Senate Bio — Macartney Abbott (mentions Shaw of Scone)", url:"https://biography.senate.gov.au/abbott-macartney/"}
+    ],
+    relations:[]
+  },
+  {
+    id:"thomas-k-abbott", name:"Thomas Kingsmill Abbott", dates:"c.1848 – 1891", tier:"sibling",
+    role:"Stipendiary magistrate · Father of Aubrey",
+    x:1020, y:780,
+    bio:`<p>Younger brother of Sir Joseph. A stipendiary magistrate by profession. Married <strong>Marion Lydiard</strong> and had at least one child, the future Northern Territory Administrator <strong>Charles Lydiard Aubrey Abbott</strong> (1886–1975) — Aubrey's middle name "Lydiard" preserves his mother's surname.</p>
+<p>Thomas died young, in 1891, predeceasing his father's generation by a decade.</p>`,
+    sources:[
+      {label:"ADB — Aubrey Abbott (son)", url:"https://adb.anu.edu.au/biography/abbott-charles-lydiard-aubrey-9301"}
+    ],
+    relations:[
+      {label:"Father of Aubrey Abbott", id:"aubrey-abbott"}
+    ]
+  },
+  {
+    id:"john-henry-abbott-sr", name:"John Henry Abbott", dates:"b. c.1850", tier:"sibling",
+    role:"Sir Joseph's youngest brother",
+    x:1260, y:780,
+    bio:`<p>Youngest known sibling of Sir Joseph. Few biographical details survive in publicly indexed sources. His nephew (Sir Joseph's son) shared his name with the addition of the Macartney middle name.</p>`,
+    sources:[],
+    relations:[]
+  },
+
+  // ===== The Hero =====
+  {
+    id:"sir-joseph", name:"Sir Joseph Palmer Abbott, KCMG", dates:"29 Sep 1842 – 15 Sep 1901", tier:"hero",
+    role:"Subject · Speaker of the NSW Assembly", direct:true,
+    x:780, y:780,
+    bio:`<p>Your <strong>great-great-grandfather</strong>, and the political centre of gravity of the entire family. Born 29 September 1842 at Muswellbrook in the upper Hunter Valley — eldest son of John Kingsmill Abbott (squatter, d.1847) and Frances Amanda Brady. After his father's death when Joseph was five, his mother moved the family to Glengarry station, near Wingen.</p>
+<p>Educated at the Church of England school at Muswellbrook, then John Armstrong's school at Redfern (from age 9), J. R. Huston's Surry Hills Academy, and finally <strong>The King's School, Parramatta</strong> — the start of a multi-generational Abbott connection to that school. From 1858–59 he was articled to his uncle Robert Palmer Abbott and then to Alexander Dick, MLA for Liverpool Plains. Admitted a solicitor in 1865.</p>
+<p>He set up legal practice with G. Pilcher in West Maitland, then returned to Murrurundi for fifteen years, specialising in the land cases generated by Robertson's 1861 Land Acts. He went on to found <strong>Abbott &amp; Allan</strong> in Sydney, becoming Australia's leading authority on property and land law. He was also a director and later chair of the <strong>Australian Mutual Provident Society (AMP)</strong>.</p>
+<p>After several failed early electoral attempts in the 1860s and 70s, he was elected to the NSW Legislative Assembly for <strong>Gunnedah</strong> on 29 November 1880. He served as <strong>Secretary for Mines</strong> in the Stuart ministry (1883–85) and briefly as <strong>Secretary for Lands</strong> under George Dibbs (1885). After 1887 he sat for <strong>Wentworth</strong>, briefly led the Protectionist opposition (March–May 1887), and worked closely with Sir Henry Parkes on parliamentary reform.</p>
+<p>Elected <strong>Speaker of the NSW Legislative Assembly in 1890</strong>, he held the chair for a decade — through the most turbulent and consequential period in colonial parliamentary history. His reputation was as an authority on procedure who imposed dignified order on a previously unruly chamber, with rulings such as requiring members to rise, remove their hats, and speak audibly.</p>
+<p>He was a leading <strong>Federation advocate</strong>: NSW delegate to the National Australasian Convention of 1891, and the Australasian Federal Conventions of 1897 and 1898, where he acted as <strong>Chairman of Committees</strong>. He was <strong>Grand Master of the United Grand Lodge of NSW (Freemasons), 1895–99</strong>. Knighted in 1892; appointed <strong>KCMG in 1895</strong>.</p>
+<p>Married twice — first at West Maitland on 14 February 1873 to <strong>Matilda Elizabeth Macartney</strong> (daughter of Dr Michael Macartney and Matilda Laird), who died in 1880; and second on 8 June 1883 at East Maitland to <strong>Edith Solomon</strong> (daughter of James Solomon and Emma née Singleton). Three sons and four daughters in total.</p>
+<p>Lived for many years at <strong>Tarella</strong>, an Italianate mansion he built in Amherst Street, Cammeray, around 1886 — Palmer Street in Cammeray is named after him. He resigned the Speakership in 1900, retired from Parliament on 11 June 1901, and died at Turramurra on 15 September 1901 aged 58, just four days before the formal opening of the first federal Parliament he had done so much to bring about. Buried Waverley Cemetery.</p>`,
+    sources:[
+      {label:"ADB — Sir Joseph Palmer Abbott", url:"https://adb.anu.edu.au/biography/abbott-sir-joseph-palmer-2858"},
+      {label:"Wikipedia — Joseph Palmer Abbott", url:"https://en.wikipedia.org/wiki/Joseph_Palmer_Abbott"},
+      {label:"Parliament of NSW — former member record", url:"https://www.parliament.nsw.gov.au/members/Pages/member-details.aspx?pk=797"}
+    ],
+    relations:[
+      {label:"First wife: Matilda Macartney", id:"matilda-macartney"},
+      {label:"Second wife: Edith Solomon", id:"edith-solomon"},
+      {label:"Father of J.H.M. Abbott", id:"jhm-abbott"},
+      {label:"Father of Senator Mac Abbott", id:"mac-abbott"},
+      {label:"Father of Joe Abbott MC", id:"joe-abbott"}
+    ]
+  },
+
+  // ====== TIER 4b — Aubrey (nephew via Thomas K.) ======
+  {
+    id:"aubrey-abbott", name:"Charles Lydiard Aubrey Abbott", dates:"4 May 1886 – 30 Apr 1975",
+    tier:"sibling", role:"Grazier · MHR Gwydir · Administrator of NT 1937–46",
+    x:1140, y:1020,
+    bio:`<p>Sir Joseph's nephew (son of his brother Thomas Kingsmill Abbott). Born at St Leonards, Sydney, 4 May 1886, son of Thomas Kingsmill Abbott (stipendiary magistrate) and Marion née Lydiard.</p>
+<p>Originally a grazier in NSW. Served in World War I (captain). Country Party MHR for <strong>Gwydir</strong> 1925–29 and 1931–37. <strong>Minister for Home Territories</strong> in the Bruce–Page government 1928–29. Following his defeat in 1937 he was appointed <strong>Administrator of the Northern Territory</strong>, serving 1937–46 — a tenure which spanned the <em>Bombing of Darwin</em> (19 February 1942) and the subsequent Japanese air raids. Wartime evacuation of Darwin civilians was conducted largely on his watch.</p>
+<p>He retired to Bowral and published <em>Australia's Frontier Province</em> (1950), a substantial book on the NT. Married Hilda Gertrude Harnett (1890–1984) at Westminster Cathedral, London, on 24 October 1916. Two daughters: <strong>Hilda Marion</strong> and <strong>Dorothy Lydiard Abbott</strong>.</p>`,
+    sources:[
+      {label:"ADB — Aubrey Abbott", url:"https://adb.anu.edu.au/biography/abbott-charles-lydiard-aubrey-9301"},
+      {label:"NT Government House — Aubrey Abbott", url:"https://govhouse.nt.gov.au/the-administrator/former-administrators/administrator-1931-to-present/charles-lydiard-aubrey-abbott"}
+    ],
+    relations:[
+      {label:"Wife: Hilda Harnett", id:"hilda-harnett"}
+    ]
+  },
+  {
+    id:"hilda-harnett", name:"Hilda Gertrude Harnett", dates:"9 Sep 1890 – 26 May 1984",
+    tier:"sibling", role:"First Lady of the NT · author & broadcaster",
+    x:1380, y:1020,
+    bio:`<p>Aubrey Abbott's wife, and a substantial figure in her own right. Born 9 September 1890 at Eucumbene Station, daughter of <strong>John Joseph Harnett</strong>, a Monaro grazier. Educated at Loreto Convent, Kirribilli.</p>
+<p>The <em>first Australian woman to serve overseas with the Australian Red Cross Society</em> in WWI — worked in the Society's Cairo office in 1916 before being invalided to England. Married Aubrey Abbott in Westminster Cathedral on 24 October 1916. President of the Australian Red Cross Society's NT division 1937–46, where she was known as <em>"First Lady"</em>.</p>
+<p>Co-authored <em>Life on the Land</em> (Sydney, 1932) with Gladys Owen and the children's book <em>Among the Hills</em> (1948). In the 1950s became a noted broadcaster and interior designer (she redecorated bedrooms at the Wentworth Hotel, Sydney). She wrote newspaper and magazine columns under the pen-name <em>"Haliden Hartt"</em>.</p>`,
+    sources:[
+      {label:"ADB — Hilda Gertrude Abbott", url:"https://adb.anu.edu.au/biography/abbott-hilda-gertrude-9987"},
+      {label:"Wikipedia — Hilda Abbott", url:"https://en.wikipedia.org/wiki/Hilda_Abbott"}
+    ],
+    relations:[]
+  },
+
+  // ====== TIER 5 — Two wives ======
+  {
+    id:"matilda-macartney", name:"Matilda Elizabeth Macartney", dates:"d. 1880", tier:"macartney",
+    role:"First wife of Sir Joseph (m.1873)", direct:true,
+    x:560, y:1100,
+    bio:`<p>Your <strong>great-great-grandmother</strong>. Daughter of <strong>Dr Michael Macartney</strong>, a Maitland physician, and Matilda née Laird.</p>
+<p>Married Sir Joseph Palmer Abbott at West Maitland on 14 February 1873. The marriage was short — only seven years — but produced three children: John Henry Macartney Abbott (1874), Macartney Abbott (1877), and Frances Amanda Abbott (c.1879). She died in 1880, leaving her three small children, the eldest five and the youngest under one.</p>
+<p>Her surname survives — and her memory lives — in the middle name <em>Macartney</em> across three generations of your direct line: her sons John Henry and Macartney; her grandson William Edward Macartney; and (the source suggests) onward into your father's generation.</p>`,
+    sources:[
+      {label:"ADB — Sir Joseph Palmer Abbott", url:"https://adb.anu.edu.au/biography/abbott-sir-joseph-palmer-2858"}
+    ],
+    relations:[
+      {label:"Mother of Mac Abbott", id:"mac-abbott"}
+    ]
+  },
+  {
+    id:"edith-solomon", name:"Edith Solomon", dates:"1854 – 1935", tier:"solomon",
+    role:"Second wife of Sir Joseph (m.1883)",
+    x:1000, y:1100,
+    bio:`<p>Sir Joseph's second wife and the mother of his last four children. Born 1854, daughter of <strong>James Solomon</strong>, Maitland merchant, and Emma née Singleton — through her mother, granddaughter of the Hunter Valley pioneer <strong>Benjamin Singleton</strong>.</p>
+<p>Married Sir Joseph at East Maitland on 8 June 1883 — three years after Matilda's death and the year before her first child was born. She bore him three daughters (Lydia 1884, Blanche Edith 1885, Eleanor Kingsmill 1887) and his last son, Joe (1891).</p>
+<p>Survived Sir Joseph by 34 years, dying in 1935 aged about 81.</p>`,
+    sources:[
+      {label:"Familypedia — Emma Singleton (Edith's mother)", url:"https://familypedia.fandom.com/wiki/Emma_Singleton_(1825-1898)"}
+    ],
+    relations:[
+      {label:"Mother of Joe Abbott", id:"joe-abbott"}
+    ]
+  },
+
+  // ====== TIER 6 — Sir Joseph's children (your great-grandfather and his siblings) ======
+  {
+    id:"jhm-abbott", name:"John Henry Macartney Abbott", dates:"26 Dec 1874 – 12 Aug 1953", tier:"macartney",
+    role:"Novelist · journalist · soldier",
+    x:300, y:1380,
+    bio:`<p>Sir Joseph's eldest son. Born 26 December 1874 at Haydonton, NSW.</p>
+<p>Australian writer of substance — published prolifically in <em>The Bulletin</em> and <em>The Lone Hand</em>, and wrote novels including <strong>Tommy Cornstalk</strong> (1902), a memoir/journalism of the South African War; <strong>Castle Vane</strong>, a romance of bushranging in the upper Hunter; and many others. Served as a trooper in the Australian contingent to the <strong>Second Boer War</strong>.</p>
+<p>Awarded a Commonwealth Literary Fund Fellowship in 1942. Married, late in life, the journalist <strong>Katherina ("Rena") Wallace</strong> at Sydney on 2 August 1926 in Roman Catholic rites; she had earlier published <em>A Bush Girl's Songs</em> (1905).</p>
+<p>His health failed in 1948 and he died at Rydalmere Mental Hospital on 12 August 1953 of vascular disease, aged 78. Survived by his wife Katherina; no children recorded in published sources.</p>`,
+    sources:[
+      {label:"ADB — J. H. M. Abbott", url:"https://adb.anu.edu.au/biography/abbott-john-henry-4961"},
+      {label:"Wikipedia — J. H. M. Abbott", url:"https://en.wikipedia.org/wiki/J._H._M._Abbott"}
+    ],
+    relations:[
+      {label:"Brother of Mac Abbott", id:"mac-abbott"}
+    ]
+  },
+  {
+    id:"mac-abbott", name:"Macartney \"Mac\" Abbott", dates:"3 Jul 1877 – 30 Dec 1960", tier:"macartney",
+    role:"Solicitor · MLA Upper Hunter · Senator for NSW", direct:true,
+    x:560, y:1380,
+    bio:`<p>Your <strong>great-grandfather</strong>. Born 3 July 1877 at Murrurundi, second son of Sir Joseph Palmer Abbott and his first wife Matilda Macartney — hence the unusual forename. His mother died when he was three, and his upbringing was shared between his aunts at Maitland and the family at Wingen.</p>
+<p>The <em>first registered student</em> on the roll of Sydney Church of England Grammar School (Shore) — 16 July 1889. Completed his schooling at <strong>The King's School, Parramatta</strong>, where he was school captain 1895–96, an athlete and boxer of distinction. Articled in law to his father's firm and assigned to his cousin J. A. K. Shaw at Scone. Served in the Commonwealth Military Forces as a second lieutenant 1901–02 — including a guard of honour for the Duke of Cornwall and York (later George V) at the opening of the first federal Parliament in Melbourne, May 1901.</p>
+<p>Admitted solicitor November 1901. Partnered with <strong>Frederick Tout</strong> (who had been articled to Sir Joseph) — the firm <em>Abbott Tout</em> continues, with additions and changes of name, to this day. Married <strong>Elizabeth Clare Hall</strong>, daughter of a grazier, on 6 September 1905. Two sons: <strong>William Edward Macartney</strong> (15 Aug 1906 — your grandfather) and <strong>Terence Kingsmill</strong> (17 Nov 1912).</p>
+<p>MLA for <strong>Upper Hunter</strong> 1913–18 (Liberal, then Nationalist). Resigned on principle in May 1918 over the conscription debate — having promised to retire if his electorate again rejected conscription, he kept the promise. Continued his legal practice in Sydney; involved in the founding of the <strong>NRMA</strong> from 1923; bought <strong>Tooloogan Vale</strong>, Scone, in 1927.</p>
+<p>Elected to the <strong>Australian Senate</strong> as a Country Party senator for NSW at the 1934 election. Served 1935–41. His Senate career was distinguished by idealistic motions on world peace and an "International Thought Exchange" — addressed to King Edward VIII in 1936 and passed by the chamber. Defeated 1940.</p>
+<p>Retired as a solicitor only in 1957, aged 80. Died Scone (Scott Memorial Hospital) on 30 December 1960. After a service at St Luke's Church of England, Scone, buried at <strong>Murrurundi Cemetery</strong>. His granddaughter Gail Abbott supplied family memories to his Senate biographer. He was remembered as kind, gentle, fond of whimsy, with "a lovely soft speaking voice" who delighted in telling stories to his grandchildren.</p>`,
+    sources:[
+      {label:"Senate Bio — Macartney Abbott", url:"https://biography.senate.gov.au/abbott-macartney/"},
+      {label:"Parliament of NSW — Mr Macartney Abbott", url:"https://www.parliament.nsw.gov.au/members/Pages/member-details.aspx?pk=1311"},
+      {label:"Wikipedia — Mac Abbott", url:"https://en.wikipedia.org/wiki/Mac_Abbott"}
+    ],
+    relations:[
+      {label:"Wife: Elizabeth Clare Hall", id:"elizabeth-hall"},
+      {label:"Son: William Edward Macartney Abbott (Ben's grandfather)", id:"wem-abbott"},
+      {label:"Son: Terence Kingsmill Abbott", id:"terence-abbott"}
+    ]
+  },
+  {
+    id:"frances-simpson", name:"Frances Amanda Abbott", dates:"b. c.1879", tier:"macartney",
+    role:"Mrs Simpson · Sir Joseph's eldest daughter",
+    x:820, y:1380,
+    bio:`<p>Sir Joseph's only daughter by his first wife Matilda Macartney. Named for her paternal grandmother, Frances Amanda Brady. Born around 1879 (the third and youngest child of the first marriage). Later married a man surnamed <strong>Simpson</strong>; little else recovered from publicly indexed sources.</p>`,
+    sources:[
+      {label:"WikiTree — Joseph Palmer Abbott (lists daughter)", url:"https://www.wikitree.com/wiki/Abbott-10278"}
+    ],
+    relations:[]
+  },
+
+  // Second marriage children
+  {
+    id:"lydia-abbott", name:"Lydia Abbott", dates:"1884 – 1971", tier:"solomon",
+    role:"Eldest daughter, second marriage",
+    x:1060, y:1380,
+    bio:`<p>Sir Joseph's eldest daughter by Edith Solomon. Born 1884, presumably named for Sir Joseph's elder sister Lydia Frances Shaw. Lived to 1971 (aged 86 or 87). Further details — marriage, descendants — not in publicly indexed sources.</p>`,
+    sources:[],
+    relations:[]
+  },
+  {
+    id:"blanche-abbott", name:"Blanche Edith Abbott", dates:"1885 – 1932", tier:"solomon",
+    role:"Second daughter, second marriage",
+    x:1280, y:1380,
+    bio:`<p>Second daughter of Sir Joseph by Edith Solomon. Named after her aunt Blanche Solomon (her mother's elder sister, 1848–1941). Born 1885, died 1932 aged about 47.</p>`,
+    sources:[
+      {label:"Familypedia — Blanche Edith Abbott", url:"https://familypedia.fandom.com/wiki/Blanche_Edith_Abbott_(1885-1932)"}
+    ],
+    relations:[]
+  },
+  {
+    id:"eleanor-abbott", name:"Eleanor Kingsmill Abbott", dates:"1887 – 1968", tier:"solomon",
+    role:"Third daughter — kept the Kingsmill name alive",
+    x:1500, y:1380,
+    bio:`<p>Third daughter of Sir Joseph by Edith Solomon. Named after her great-grandmother Eleanor Kingsmill — and so the only person in this generation directly named for the immigrant matriarch. Born 1887, died 1968, aged 81.</p>`,
+    sources:[
+      {label:"FamilySearch — Eleanor Kingsmill Abbott", url:"https://ancestors.familysearch.org/en/L838-7VM/eleanor-kingsmill-abbott-1887-1968"}
+    ],
+    relations:[]
+  },
+  {
+    id:"joe-abbott", name:"Joseph Palmer \"Joe\" Abbott, OBE, MC", dates:"18 Oct 1891 – 7 May 1965", tier:"solomon",
+    role:"Grazier of Murrulla · MHR for New England 1940–49",
+    x:1720, y:1380,
+    bio:`<p>Sir Joseph's youngest child and only son by Edith Solomon — named for his father. Born 18 October 1891 at North Sydney.</p>
+<p>Educated at The Armidale School and the University of Sydney (BA 1913). Served on the <strong>Western Front</strong> in WWI. Awarded the <strong>Military Cross</strong> in September 1918 for an act of conspicuous bravery — leaping into a burning gun-pit during an artillery bombardment and extinguishing a fire started by enemy shelling.</p>
+<p>After the war he acquired <strong>Murrulla</strong>, the pastoral property near Wingen formerly owned by his uncle W. E. Abbott — putting him back on the original family ground. Married <strong>Katherine Bliss Wilkinson</strong> (c.1894–1981) at St James's Anglican Church, Sydney, on 26 February 1924. Elected president of the <strong>Graziers' Association of NSW</strong> in 1935.</p>
+<p>Country Party MHR for <strong>New England</strong> 1940–49. <strong>Minister for Home Security</strong> (June–August 1941) under Menzies, responsible for civil defence in the months before Pearl Harbor. Continued as assistant minister to the defence and army ministers.</p>
+<p>Died 7 May 1965 at Camperdown, Sydney, aged 73. Buried in the private cemetery at Murrulla. Survived by his wife and one son (name not in the public record).</p>`,
+    sources:[
+      {label:"ADB — Joseph Palmer (Joe) Abbott", url:"https://adb.anu.edu.au/biography/abbott-joseph-palmer-joe-9303"},
+      {label:"Wikipedia — Joe Abbott", url:"https://en.wikipedia.org/wiki/Joe_Abbott_(Australian_politician)"},
+      {label:"Virtual War Memorial — Joe Abbott MC", url:"https://vwma.org.au/explore/people/90026"}
+    ],
+    relations:[]
+  },
+
+  // ====== TIER 7 — Spouses of children ======
+  {
+    id:"elizabeth-hall", name:"Elizabeth Clare Hall", dates:"of Scone · m.1905", tier:"macartney",
+    role:"Wife of Senator Mac Abbott", direct:true,
+    x:560, y:1660,
+    bio:`<p>Your <strong>great-grandmother</strong>. Daughter of a grazier of the Scone district. Her three brothers were Old Boys of The King's School, Parramatta — like the Abbotts, a King's family.</p>
+<p>Married Macartney Abbott at Scone on 6 September 1905. Two sons followed: William Edward Macartney Abbott (b.1906, your grandfather) and Terence Kingsmill Abbott (b.1912). She and Mac lived for years at Turramurra (Sydney's outer northern suburbs) — convenient to both Mac's legal practice and the Upper Hunter electorate — before retiring to Tooloogan Vale near Scone.</p>
+<p>Survived Mac at his death in 1960.</p>`,
+    sources:[
+      {label:"Senate Bio — Macartney Abbott", url:"https://biography.senate.gov.au/abbott-macartney/"}
+    ],
+    relations:[]
+  },
+
+  // ====== TIER 8 — Grandchildren (Ben's grandfather's generation) ======
+  {
+    id:"wem-abbott", name:"William Edward Macartney Abbott", dates:"b. 15 Aug 1906", tier:"grand",
+    role:"Grazier of Tooloogan Vale · Memoirist (Your grandfather)", direct:true,
+    x:560, y:1900,
+    bio:`<p>Your <strong>grandfather</strong>. Born 15 August 1906, eldest son of Senator Mac Abbott and Elizabeth Clare Hall.</p>
+<p>Unusually for the Abbott men of his generation, his father did not send him to The King's School — a deliberate departure. He grew up between Sydney (Turramurra) and the upper Hunter, and made his life on the land as a grazier at <strong>Tooloogan Vale</strong>, the Scone-district property his father bought in 1927.</p>
+<p>In 1987 he published a memoir — <strong>The Contented Years: Living at Tooloogan Half a Century Ago</strong> — with the Scone and Upper Hunter Historical Society. It is one of the few first-person Abbott voices in print and a primary source for his father's life at Tooloogan (the Senate biographer drew on a typescript he wrote, <em>"Portrait of My Father"</em>).</p>
+<p>He had at least two children: <strong>Elizabeth Gail Abbott</strong> (who is named in the Senate biography of her grandfather as the family informant) and <strong>Timothy Kingsmill Abbott</strong> (b. 1947, Ben's father). Through Timothy, the Kingsmill name — first brought into the family by Eleanor Kingsmill of Co. Clare more than two centuries ago — survives in the present day.</p>`,
+    sources:[
+      {label:"Senate Bio — Macartney Abbott (cites W.E.M. Abbott)", url:"https://biography.senate.gov.au/abbott-macartney/"}
+    ],
+    relations:[
+      {label:"Father: Senator Mac Abbott", id:"mac-abbott"},
+      {label:"Daughter: Elizabeth Gail Abbott", id:"gail-abbott"},
+      {label:"Son: Timothy Kingsmill Abbott", id:"bens-father"}
+    ]
+  },
+  {
+    id:"terence-abbott", name:"Terence Kingsmill Abbott", dates:"b. 17 Nov 1912", tier:"grand",
+    role:"Younger son of Senator Mac Abbott",
+    x:780, y:1900,
+    bio:`<p>Your grandfather's younger brother — your <strong>great-uncle</strong>. Born 17 November 1912, second son of Senator Mac Abbott and Elizabeth Clare Hall. The Kingsmill middle name continues the family tradition begun with his great-great-grandmother Eleanor Kingsmill more than a century earlier.</p>
+<p>Further biographical details not recovered from publicly indexed sources.</p>`,
+    sources:[
+      {label:"Senate Bio — Macartney Abbott", url:"https://biography.senate.gov.au/abbott-macartney/"}
+    ],
+    relations:[]
+  },
+  {
+    id:"gail-abbott", name:"Elizabeth Gail Abbott", dates:"20th – 21st century", tier:"grand",
+    role:"Family historian · Daughter of W.E.M. Abbott (Ben's aunt)", direct:false,
+    x:340, y:1900,
+    bio:`<p>Your <strong>aunt</strong> — daughter of William Edward Macartney Abbott (the Tooloogan memoirist) and elder sister of your father Timothy Kingsmill Abbott.</p>
+<p>She is the "Gail Abbott" credited in the Senate biography of her grandfather Senator Mac Abbott (Denis Strangman, <em>Biographical Dictionary of the Australian Senate</em>, vol. 2, 2004) — the granddaughter who supplied family memories and personal recollections to the biographer. Without her contribution, several of the warm personal details about Mac Abbott in the published record — including the description of him as "kind and gentle, one who loved whimsy" with "a lovely soft speaking voice" who "delighted in telling stories to his grandchildren" — would have been lost.</p>
+<p>Her role as family memory-keeper across the late twentieth century is the bridge between the documented colonial Abbotts and the living family today.</p>`,
+    sources:[
+      {label:"Senate Bio — Macartney Abbott (acknowledges Gail Abbott as informant)", url:"https://biography.senate.gov.au/abbott-macartney/"}
+    ],
+    relations:[
+      {label:"Father: W.E.M. Abbott", id:"wem-abbott"},
+      {label:"Brother: Timothy Kingsmill Abbott", id:"bens-father"}
+    ]
+  },
+  {
+    id:"hilda-marion", name:"Hilda Marion Abbott", dates:"20th century", tier:"grand",
+    role:"Elder daughter of Aubrey & Hilda",
+    x:1140, y:1660,
+    bio:`<p>Elder daughter of Aubrey Abbott (NT Administrator) and Hilda Harnett Abbott. Born in the 1920s. Further details not recovered from publicly indexed sources.</p>`,
+    sources:[],
+    relations:[]
+  },
+  {
+    id:"dorothy-lydiard", name:"Dorothy Lydiard Abbott", dates:"20th century", tier:"grand",
+    role:"Younger daughter of Aubrey & Hilda",
+    x:1380, y:1660,
+    bio:`<p>Younger daughter of Aubrey Abbott and Hilda Harnett Abbott. Born in the 1920s. The middle name Lydiard preserves the Lydiard family connection from her paternal grandmother Marion Lydiard.</p>`,
+    sources:[],
+    relations:[]
+  },
+  {
+    id:"joe-son", name:"— Son of Joe Abbott —", dates:"b. 1920s/30s", tier:"grand",
+    role:"Only child of Joe & Katherine Wilkinson",
+    x:1720, y:1660,
+    bio:`<p>The only son of Joe Abbott MC and Katherine Bliss Wilkinson. Born in the 1920s or 1930s, he survived his father at Joe's death in May 1965 — but his forename is not in the publicly available obituary record.</p>
+<p>A search of <em>The Sydney Morning Herald</em> via Trove for May 1965 death notices, or the NSW BDM index, would identify him. He would have inherited Murrulla.</p>`,
+    sources:[
+      {label:"ADB — Joe Abbott (mentions surviving son)", url:"https://adb.anu.edu.au/biography/abbott-joseph-palmer-joe-9303"}
+    ],
+    relations:[]
+  },
+
+  // ====== TIER 9 — Ben's father & his generation ======
+  {
+    id:"bens-father", name:"Timothy Kingsmill Abbott", dates:"b. 1947", tier:"modern",
+    role:"Son of W.E.M. Abbott · Ben's father", direct:true,
+    x:560, y:2150,
+    bio:`<p>Your <strong>father</strong>. Born in 1947, the son of William Edward Macartney Abbott (Tooloogan Vale, b.1906) and grandson of Senator Macartney "Mac" Abbott. His middle name <strong>Kingsmill</strong> carries the family's oldest surviving given-name marker — first brought into the family by his great-great-great-grandmother <strong>Eleanor Kingsmill of Co. Clare</strong> (c.1787–1873), and now in unbroken use for six generations.</p>
+<p>Younger brother of <strong>Elizabeth Gail Abbott</strong>. Father of <strong>Michael John Macartney Abbott</strong> (b.1976) and <strong>Benjamin Abbott</strong>.</p>
+<p>His birth in 1947 is the family's first post-war generation — born exactly a century after his great-great-grandfather John Kingsmill Abbott died at Glengarry, leaving the household that produced this entire Australian line.</p>`,
+    sources:[],
+    relations:[
+      {label:"Father: William Edward Macartney Abbott", id:"wem-abbott"},
+      {label:"Sister: Elizabeth Gail Abbott", id:"gail-abbott"},
+      {label:"Son: Michael John Macartney Abbott", id:"michael-abbott"},
+      {label:"Son: Benjamin Abbott", id:"ben-abbott"}
+    ]
+  },
+
+  // ====== TIER 10 — Ben and his brother ======
+  {
+    id:"michael-abbott", name:"Michael John Macartney Abbott", dates:"b. 1976", tier:"modern",
+    role:"Elder son of Timothy · Ben's brother", direct:false,
+    x:440, y:2400,
+    bio:`<p>Your <strong>elder brother</strong>. Born 1976, eldest son of Timothy Kingsmill Abbott and grandson of W.E.M. Abbott of Tooloogan Vale.</p>
+<p>The <strong>Macartney</strong> middle name continues through him in unbroken male-line transmission across four generations — back to his great-great-grandmother <strong>Matilda Elizabeth Macartney</strong> (Sir Joseph's first wife, died 1880) whose surname was preserved as a forename by her sons and has been handed down ever since: John Henry <em>Macartney</em> Abbott (1874) → <em>Macartney</em> Abbott (1877) → William Edward <em>Macartney</em> Abbott (1906) → Michael John <em>Macartney</em> Abbott (1976).</p>
+<p>And his first name <strong>John</strong> echoes the family's other recurring given name — John Kingsmill Abbott (the immigrant patriarch, 1805–1847) and his youngest brother John Henry Abbott.</p>`,
+    sources:[],
+    relations:[
+      {label:"Father: Timothy Kingsmill Abbott", id:"bens-father"},
+      {label:"Brother: Benjamin Abbott", id:"ben-abbott"}
+    ]
+  },
+  {
+    id:"ben-abbott", name:"Benjamin Abbott", dates:"21st century", tier:"modern",
+    role:"You", direct:true,
+    x:680, y:2400,
+    bio:`<p><strong>You.</strong> Sixth-generation descendant of the Abbotts of Broadford, Co. Clare — and now the present researcher and custodian of the family memory.</p>
+<p>Your direct line of descent, in seven generations:</p>
+<p>
+<strong>Thomas Abbott</strong> (c.1773 Broadford) &nbsp;→&nbsp;
+<strong>John Kingsmill Abbott</strong> (1805 Broadford / Muswellbrook) &nbsp;→&nbsp;
+<strong>Sir Joseph Palmer Abbott KCMG</strong> (1842 Muswellbrook) &nbsp;→&nbsp;
+<strong>Senator Macartney "Mac" Abbott</strong> (1877 Murrurundi) &nbsp;→&nbsp;
+<strong>William Edward Macartney Abbott</strong> (1906) &nbsp;→&nbsp;
+<strong>Timothy Kingsmill Abbott</strong> (1947) &nbsp;→&nbsp;
+<strong>you</strong>.
+</p>
+<p>From a constable's son in west Clare in the 1770s to a researcher at a screen in 2026 — seven generations, a single traceable male line, and three given names (Kingsmill, Macartney, Palmer) that have been used to carry the names of long-dead ancestors forward into living memory.</p>
+<p>Younger brother of <strong>Michael John Macartney Abbott</strong>.</p>`,
+    sources:[],
+    relations:[
+      {label:"Father: Timothy Kingsmill Abbott", id:"bens-father"},
+      {label:"Brother: Michael John Macartney Abbott", id:"michael-abbott"},
+      {label:"Aunt: Elizabeth Gail Abbott", id:"gail-abbott"}
+    ]
+  }
+];
+
+/* ====== Render people ====== */
+const canvas = document.getElementById('canvas');
+const svg = document.getElementById('connectors');
+const byId = {};
+PEOPLE.forEach(p=>{byId[p.id]=p});
+
+PEOPLE.forEach(p=>{
+  const el = document.createElement('div');
+  el.className = 'person ' + (p.tier||'') + (p.direct?' direct-line':'');
+  el.style.left = p.x+'px';
+  el.style.top  = p.y+'px';
+  el.dataset.id = p.id;
+  el.innerHTML = `
+    ${p.tier==='hero'?'<span class="crest">★</span>':''}
+    <div class="role">${p.role||''}</div>
+    <div class="name">${p.name}</div>
+    <div class="dates">${p.dates||''}</div>
+  `;
+  el.addEventListener('click',()=>openPanel(p.id));
+  canvas.appendChild(el);
+});
+
+/* ====== Draw connector lines ====== */
+function line(x1,y1,x2,y2,cls=''){
+  const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+  const mx = (x1+x2)/2;
+  path.setAttribute('d',`M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`);
+  path.setAttribute('class','line '+cls);
+  svg.appendChild(path);
+}
+// Helpers
+function bottomOf(id){const p=byId[id];return {x:p.x+100, y:p.y+96}}
+function topOf(id){const p=byId[id];return {x:p.x+100, y:p.y}}
+function rightOf(id){const p=byId[id];return {x:p.x+200, y:p.y+45}}
+function leftOf(id){const p=byId[id];return {x:p.x, y:p.y+45}}
+
+// Couples (horizontal gold lines)
+function couple(a,b){
+  const A=byId[a], B=byId[b];
+  const y = Math.max(A.y,B.y)+45;
+  const x1 = A.x<B.x ? A.x+200 : B.x+200;
+  const x2 = A.x<B.x ? B.x : A.x;
+  const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+  path.setAttribute('d',`M ${x1} ${y} L ${x2} ${y}`);
+  path.setAttribute('class','line couple');
+  svg.appendChild(path);
+}
+// Parent→child line
+function parentChild(parentId, childId, direct=false){
+  const p = bottomOf(parentId);
+  const c = topOf(childId);
+  line(p.x, p.y, c.x, c.y, direct?'direct':'');
+}
+
+// Draw the structure
+couple('thomas-abbott','eleanor-kingsmill');
+couple('john-kingsmill-abbott','frances-amanda-brady');
+couple('matilda-macartney','sir-joseph');           // visually; actual rendered below
+couple('sir-joseph','edith-solomon');
+couple('mac-abbott','elizabeth-hall');
+couple('aubrey-abbott','hilda-harnett');
+
+// Thomas & Eleanor → John Kingsmill, Robert Palmer
+parentChild('thomas-abbott','john-kingsmill-abbott', true);
+parentChild('eleanor-kingsmill','john-kingsmill-abbott', true);
+parentChild('thomas-abbott','robert-palmer-abbott');
+
+// John Kingsmill & Frances → Sir Joseph + siblings
+['wingen-abbott','lydia-shaw','sir-joseph','thomas-k-abbott','john-henry-abbott-sr'].forEach(id=>{
+  parentChild('john-kingsmill-abbott', id, id==='sir-joseph');
+  parentChild('frances-amanda-brady', id, id==='sir-joseph');
+});
+
+// Michael Macartney parents → Matilda
+parentChild('michael-macartney','matilda-macartney', true);
+
+// Thomas K. → Aubrey
+parentChild('thomas-k-abbott','aubrey-abbott');
+
+// Sir Joseph + wives → children
+['jhm-abbott','mac-abbott','frances-simpson'].forEach(id=>{
+  parentChild('matilda-macartney', id, id==='mac-abbott');
+  parentChild('sir-joseph', id, id==='mac-abbott');
+});
+['lydia-abbott','blanche-abbott','eleanor-abbott','joe-abbott'].forEach(id=>{
+  parentChild('edith-solomon', id);
+  parentChild('sir-joseph', id);
+});
+
+// Mac + Elizabeth → William Edward Macartney + Terence + (Gail as cousin/aunt)
+parentChild('mac-abbott','wem-abbott', true);
+parentChild('elizabeth-hall','wem-abbott', true);
+parentChild('mac-abbott','terence-abbott');
+parentChild('elizabeth-hall','terence-abbott');
+
+// Aubrey + Hilda → daughters
+parentChild('aubrey-abbott','hilda-marion');
+parentChild('aubrey-abbott','dorothy-lydiard');
+parentChild('hilda-harnett','hilda-marion');
+parentChild('hilda-harnett','dorothy-lydiard');
+
+// Joe → son
+parentChild('joe-abbott','joe-son');
+
+// W.E.M. → his two children (Gail & Tim)
+parentChild('wem-abbott','gail-abbott');
+parentChild('wem-abbott','bens-father', true);
+
+// Tim → Michael & Ben
+parentChild('bens-father','michael-abbott');
+parentChild('bens-father','ben-abbott', true);
+
+/* ====== Panel ====== */
+const panel = document.getElementById('panel');
+const panelName = document.getElementById('panel-name');
+const panelDates = document.getElementById('panel-dates');
+const panelRole = document.getElementById('panel-role');
+const panelBody = document.getElementById('panel-body');
+
+function openPanel(id){
+  const p = byId[id]; if(!p) return;
+  panelName.textContent = p.name;
+  panelDates.textContent = p.dates||'';
+  panelRole.textContent = p.role||'';
+  let body = `<div class="meta">
+    ${p.dates?`<span class="label">Lived</span><span>${p.dates}</span>`:''}
+    ${p.role?`<span class="label">Role</span><span>${p.role}</span>`:''}
+  </div>
+  <h3>Biography</h3>
+  ${p.bio||''}`;
+  if(p.relations && p.relations.length){
+    body += `<h3>Relations</h3><div class="relation">${
+      p.relations.map(r=>`• <a data-jump="${r.id}">${r.label}</a>`).join('<br>')
+    }</div>`;
+  }
+  if(p.sources && p.sources.length){
+    body += `<h3>Sources</h3><ul class="refs">${
+      p.sources.map(s=>`<li><a href="${s.url}" target="_blank" rel="noopener">${s.label}</a></li>`).join('')
+    }</ul>`;
+  }
+  panelBody.innerHTML = body;
+  panel.classList.add('open');
+  panel.setAttribute('aria-hidden','false');
+
+  // Wire up jump links
+  panelBody.querySelectorAll('a[data-jump]').forEach(a=>{
+    a.addEventListener('click',e=>{
+      e.preventDefault();
+      openPanel(a.dataset.jump);
+      scrollToPerson(a.dataset.jump);
+    });
+  });
+}
+document.getElementById('close-panel').onclick = ()=>{
+  panel.classList.remove('open');panel.setAttribute('aria-hidden','true');
+};
+
+function scrollToPerson(id){
+  const p = byId[id]; if(!p) return;
+  const wrap = document.getElementById('canvas-wrap');
+  const targetX = (p.x+100)*currentZoom - wrap.clientWidth/2;
+  const targetY = (p.y+50)*currentZoom - wrap.clientHeight/2;
+  wrap.scrollTo({left:Math.max(0,targetX), top:Math.max(0,targetY), behavior:'smooth'});
+}
+
+/* ====== Zoom ====== */
+let currentZoom = 0.7;
+function applyZoom(z){
+  currentZoom = Math.max(0.35, Math.min(1.4, z));
+  canvas.style.transform = `scale(${currentZoom})`;
+  canvas.style.width = '3800px';
+  canvas.style.height = '3400px';
+}
+document.querySelectorAll('[data-zoom]').forEach(b=>{
+  b.addEventListener('click',()=>{
+    const a = b.dataset.zoom;
+    if(a==='in') applyZoom(currentZoom+0.12);
+    else if(a==='out') applyZoom(currentZoom-0.12);
+    else { applyZoom(0.7); document.getElementById('canvas-wrap').scrollTo({left:0,top:0}); }
+  });
+});
+applyZoom(0.7);
+
+/* ====== Search ====== */
+const searchEl = document.getElementById('search');
+searchEl.addEventListener('input',()=>{
+  const q = searchEl.value.trim().toLowerCase();
+  document.querySelectorAll('.person').forEach(el=>{
+    el.classList.remove('match','dim');
+    if(!q) return;
+    const p = byId[el.dataset.id];
+    const hay = (p.name+' '+(p.role||'')+' '+(p.dates||'')).toLowerCase();
+    if(hay.includes(q)) el.classList.add('match');
+    else el.classList.add('dim');
+  });
+});
+
+/* ====== Highlight Ben's line toggle ====== */
+const highlightBtn = document.getElementById('highlight-line');
+let highlighting = false;
+highlightBtn.addEventListener('click',()=>{
+  highlighting = !highlighting;
+  highlightBtn.classList.toggle('active', highlighting);
+  document.querySelectorAll('.person').forEach(el=>{
+    const p = byId[el.dataset.id];
+    if(!highlighting){ el.classList.remove('dim'); return; }
+    if(!p.direct) el.classList.add('dim');
+    else el.classList.remove('dim');
+  });
+});
+
+/* Open Sir Joseph by default after intro closes */
+document.querySelector('#intro .start').addEventListener('click',()=>{
+  setTimeout(()=>scrollToPerson('sir-joseph'), 250);
+});
+</script>
+</body>
+</html>
